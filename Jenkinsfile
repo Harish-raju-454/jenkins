@@ -1,47 +1,19 @@
 pipeline {
     agent any
 
-    environment {
-        APP_ENV = "production"
-        DEBUG = "false"
-        APP_PORT = "8080"
-    }
-
     stages {
-        stage('Checkout') {
+        stage('Install dependencies') {
             steps {
-                git branch: 'main', url: 'https://github.com/Harish-raju-454/jenkins.git'
+                echo "Installing Python dependencies..."
+                sh 'pip install -r requirements.txt'
             }
         }
 
-        stage('Build') {
-            steps {
-                echo "Building the project..."
-                sh 'mvn clean install'
-            }
-        }
-
-        stage('Test') {
+        stage('Run Tests') {
             steps {
                 echo "Running tests..."
-                sh 'mvn test'
+                sh 'pytest --maxfail=1 --disable-warnings -q'
             }
-        }
-
-        stage('Deploy') {
-            steps {
-                echo "Deploying application..."
-                sh "java -jar target/*.jar"
-            }
-        }
-    }
-
-    post {
-        success {
-            echo 'Pipeline completed successfully ✅'
-        }
-        failure {
-            echo 'Pipeline failed ❌'
         }
     }
 }
