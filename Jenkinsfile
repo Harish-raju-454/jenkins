@@ -1,27 +1,47 @@
 pipeline {
     agent any
+
+    environment {
+        APP_ENV = "production"
+        DEBUG = "false"
+        APP_PORT = "8080"
+    }
+
     stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Harish-raju-454/jenkins.git'
+            }
+        }
+
         stage('Build') {
             steps {
-                sh '''
-                mkdir -p dist
-                zip -r dist/Jenkins-build-2.zip . -x "*/.git/*"
-                '''
+                echo "Building the project..."
+                sh 'mvn clean install'
             }
         }
+
         stage('Test') {
             steps {
-                sh '''
-                pip install pytest
-                pytest || echo "⚠ No tests found or tests failed"
-                '''
+                echo "Running tests..."
+                sh 'mvn test'
             }
         }
-        stage('Archive') {
+
+        stage('Deploy') {
             steps {
-                archiveArtifacts artifacts: 'dist/Jenkins-build-2.zip', followSymlinks: false
+                echo "Deploying application..."
+                sh "java -jar target/*.jar"
             }
         }
     }
-}
 
+    post {
+        success {
+            echo 'Pipeline completed successfully ✅'
+        }
+        failure {
+            echo 'Pipeline failed ❌'
+        }
+    }
+}
